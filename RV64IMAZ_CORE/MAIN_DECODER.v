@@ -71,7 +71,7 @@
     output wire       RegWrite,
     output wire [2:0] ALUOp,
     
-    output wire       start_mul,  // Goes to Hazard Unit and Execute Stage
+ //   output wire       start_mul,  // Goes to Hazard Unit and Execute Stage
     output wire       start_div,  // Goes to Hazard Unit and Execute Stage
     output wire [1:0] Exec_Sel,   // Goes to Execute Stage (Controls the 3x1 Mux)
     output wire [2:0] mul_op_sel,  // Goes to the Multiplier Unit (Overrides funct3 for MULW)
@@ -99,7 +99,7 @@
     // ---------------------------------------------------------
     // DRIVING THE OUTPUT PORTS
     // ---------------------------------------------------------
-    assign start_mul  = is_mul;
+ //   assign start_mul  = is_mul;
     
     assign start_div  = is_div;
     

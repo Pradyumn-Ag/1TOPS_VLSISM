@@ -132,11 +132,11 @@ module HAZARD_UNIT (
     input  wire [1:0] ResultSrc_E, // 2'b01 = Load Memory (Double check your Control Unit!)
     input  wire       PCSrc_E,     // 1 if a branch/jump is TAKEN in EX stage
     //M-Extension Inputs
-    input wire        Mul_Done_E,
+  //  input wire        Mul_Done_E,
     input wire        Div_Done_E,
-    input wire        Start_Mul_E,
+  //  input wire        Start_Mul_E,
     input wire        Start_Div_E,
-    input wire        Mul_Busy_E,
+  //  input wire        Mul_Busy_E,
     input wire        Div_Busy_E,
     
     // Inputs from Memory Stage
@@ -266,9 +266,9 @@ module HAZARD_UNIT (
     assign lwStall = ((ResultSrc_E == 2'b01) || (ResultSrc_E == 2'b11)) && ((rs1_D == rd_E) || (rs2_D == rd_E));
 
     // Freeze PC (Fetch) and Decode stage if there is a Load-Use hazard
-    assign Stall_F = lwStall |  Mul_Busy_E | Div_Busy_E | amo_stall | (count != 1'b1 && mem_read) | (count1 != 1'b1 && is_mem_read_M) ;
-    assign Stall_D = lwStall |  Mul_Busy_E | Div_Busy_E | amo_stall | (count != 1'b1 && mem_read) | (count1 != 1'b1 && is_mem_read_M);
-    assign Stall_E = Mul_Busy_E | Div_Busy_E | amo_stall| (count != 1'b1 && mem_read) | (count1 != 1'b1 && is_mem_read_M);
+    assign Stall_F = lwStall | Div_Busy_E | amo_stall | (count != 1'b1 && mem_read) | (count1 != 1'b1 && is_mem_read_M) ;
+    assign Stall_D = lwStall | Div_Busy_E | amo_stall | (count != 1'b1 && mem_read) | (count1 != 1'b1 && is_mem_read_M);
+    assign Stall_E = Div_Busy_E | amo_stall| (count != 1'b1 && mem_read) | (count1 != 1'b1 && is_mem_read_M);
     assign Stall_M = (count != 1'b1  && mem_read) | (count1 != 1'b1 && is_mem_read_M);
     // Flush Decode stage if a branch/jump is taken
     assign Flush_D = PCSrc_E | csr_pc_en;
@@ -276,7 +276,7 @@ module HAZARD_UNIT (
     // Flush Execute stage if a branch/jump is taken OR if there is a Load-Use stall
     // (If we stall D, we must flush E to insert a bubble/NOP)
     assign Flush_E = lwStall | PCSrc_E | csr_pc_en;
-    assign Flush_MEM = (Mul_Busy_E | Div_Busy_E) && !amo_stall; //AMO blocks flush *****
+    assign Flush_MEM = ( Div_Busy_E) && !amo_stall; //AMO blocks flush *****
     
 
 endmodule

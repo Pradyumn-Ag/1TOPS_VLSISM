@@ -449,7 +449,7 @@ always @(posedge clk) begin
     wire             ALUSrc_D;
 
     // M-Extension control wires
-    wire             start_mul_D;
+  //  wire             start_mul_D;
     wire             start_div_D;
     wire [1:0]       Exec_Sel_D;
     wire [2:0]       mul_op_sel_D;
@@ -501,7 +501,7 @@ always @(posedge clk) begin
         .ALUControl (ALUControl_D),
         .ALUSrc     (ALUSrc_D),
         .ImmSrc     (ImmSrc_D),
-        .start_mul  (start_mul_D),
+    //    .start_mul  (start_mul_D),
         .start_div  (start_div_D),
         .Exec_Sel   (Exec_Sel_D),
         .mul_op_sel (mul_op_sel_D),
@@ -534,7 +534,7 @@ always @(posedge clk) begin
     reg [2:0]                  funct3_E;
     reg [1:0]                  MemOffset_E;
     reg [WIDTH-1:0]            ImmExt_E;
-    reg                        start_mul_E;
+//    reg                        start_mul_E;
     reg                        start_div_E;
     reg [1:0]                  Exec_Sel_E;
     reg [2:0]                  mul_op_sel_E;
@@ -573,7 +573,7 @@ always @(posedge clk) begin
             op_E            <= 7'b0;
             funct3_E        <= 3'b0;
             MemOffset_E     <= 2'b0;
-            start_mul_E     <= 1'b0;
+      //      start_mul_E     <= 1'b0;
             start_div_E     <= 1'b0;
             Exec_Sel_E      <= 2'b0;
             mul_op_sel_E    <= 3'b0;
@@ -613,7 +613,7 @@ always @(posedge clk) begin
             op_E           <= Instr_D[6:0];
             funct3_E       <= Instr_D[14:12];
             MemOffset_E    <= Instr_D[13:12];
-            start_mul_E    <= start_mul_D;
+       //     start_mul_E    <= start_mul_D;
             start_div_E    <= start_div_D;
             Exec_Sel_E     <= Exec_Sel_D;
             mul_op_sel_E   <= mul_op_sel_D;
@@ -668,9 +668,9 @@ always @(posedge clk) begin
     // M-Extension outputs
     wire [WIDTH-1:0] Mul_Result_E;
     wire [WIDTH-1:0] Div_Result_E;
-    wire             Mul_Done_E;
+  //  wire             Mul_Done_E;
     wire             Div_Done_E;
-    wire             Mul_Busy_E;
+  //  wire             Mul_Busy_E;
     wire             Div_Busy_E;
     // ── CSR data: zimm uses pipelined imm, RS1 uses forwarded value ──
     wire [WIDTH-1:0] csr_data_final;
@@ -794,15 +794,15 @@ always @(posedge clk) begin
     ) m_ext_unit (
         .clk        (clk),
         .rst        (rst),
-        .mul_valid  (start_mul_E),
+      //  .mul_valid  (start_mul_E),
         .div_valid  (start_div_E),
         .op_sel     (mul_op_sel_E),
         .is_word    (is_word_E),
         .rs1_data   (SrcA_E),
         .rs2_data   (SrcB_E),
         .mul_result (Mul_Result_E),
-        .mul_ready  (Mul_Done_E),
-        .mul_busy   (Mul_Busy_E),
+      //  .mul_ready  (Mul_Done_E),
+      // .mul_busy   (Mul_Busy_E),
         .div_busy   (Div_Busy_E),
         .div_result (Div_Result_E),
         .div_ready  (Div_Done_E)
@@ -1118,11 +1118,11 @@ assign RegWrite_W_gated = RegWrite_W && !(is_sc_W && sc_already_written);
         .rd_E        (Rd_E),
         .ResultSrc_E (ResultSrc_E),
         .PCSrc_E     (PCSrc_corrected),
-        .Mul_Done_E  (Mul_Done_E),
+     //   .Mul_Done_E  (Mul_Done_E),
         .Div_Done_E  (Div_Done_E),
-        .Start_Mul_E (start_mul_D),
+     //   .Start_Mul_E (start_mul_D),
         .Start_Div_E (start_div_D),
-        .Mul_Busy_E  (Mul_Busy_E),
+    //    .Mul_Busy_E  (Mul_Busy_E),
         .Div_Busy_E  (Div_Busy_E),
         .rd_M        (Rd_M),
         .RegWrite_M  (RegWrite_M),

@@ -19,7 +19,7 @@ module RV64M_EXTENSION #(
     // ------------------------------------------------------------------------
     // Control Signals (From CPU Pipeline - Execute Stage)
     // ------------------------------------------------------------------------
-    input  wire             mul_valid,          // High to trigger a multiplication
+  //  input  wire             mul_valid,          // High to trigger a multiplication
     input  wire             div_valid,          // High to trigger a division
     input  wire [2:0]       op_sel,             // 3-bit operation selector (funct3 / mul_op_sel)
     input  wire             is_word,            // High for 32-bit operations (*W instructions)
@@ -35,8 +35,8 @@ module RV64M_EXTENSION #(
     // ------------------------------------------------------------------------
     // Multiplier Outputs
     output wire [WIDTH-1:0] mul_result,         // Final calculated product
-    output wire             mul_ready,          // High when the multiplication is complete
-    output wire             mul_busy,           // High when multiplier is actively computing
+//    output wire             mul_ready,          // High when the multiplication is complete
+//    output wire             mul_busy,           // High when multiplier is actively computing
     
     // Divider Outputs
     output wire [WIDTH-1:0] div_result,         // Final calculated quotient/remainder
@@ -49,19 +49,14 @@ module RV64M_EXTENSION #(
     // =========================================================================
     // Handles all MUL, MULH, MULHSU, MULHU, and MULW instructions using 
     // a multi-cycle Radix-2 Booth's algorithm.
-    MULTIPLIER_UNIT #(
-        .WIDTH(WIDTH)            
-    ) u_booth_multiplier (
-        .clk      (clk),         
-        .rst      (rst),         
-        .start    (mul_valid),   
-        .op_sel   (op_sel),      // Uses the op_sel (with MULW override) from Decoder
-        .rs1_data (rs1_data),    
-        .rs2_data (rs2_data),    
-        
-        .result   (mul_result),  
-        .done     (mul_ready),
-        .busy     (mul_busy)     
+    Booth_Multiplier#(
+        .W(WIDTH)
+    ) combinational_mul (
+        .M          (rs1_data),        // rs1 forwarded data
+        .Q          (rs2_data),        // rs2 forwarded data
+        .funct3     (op_sel),      // 3-bit instruction funct3
+        .is_word    (is_word),     // High if MULW
+        .Mul_Result (mul_result)   // Directly feeds m9 MUX
     );  
 
     // =========================================================================

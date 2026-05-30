@@ -1,69 +1,58 @@
-`ifndef GLOBAL_SVH
-`include "global.svh"
-`endif
 `timescale 1ns / 1ps
 /* verilator lint_off UNUSEDSIGNAL */
-// Kogge-Stone parallel-prefix adder, 16-bit.
-// P/G propagate through log2(16)=4 prefix stages.
-module KSA (
-    input  wire [2*W-1:0] a, b,
-    input  wire cin,
-    output wire [2*W-1:0] sum,
-    output wire cout
+
+module KSA #(
+    parameter N = 128                                 // bit-width (= 2*W), must be power of 2
+)(
+    input  wire [N-1:0] a, b,
+    input  wire         cin,
+    output wire [N-1:0] sum,
+    output wire         cout
 );
-    // ---- pre-processing: bit-level generate / propagate ----
-    wire [2*W-1:0] g0 = a & b;
-    wire [2*W-1:0] p0 = a ^ b;
+    // ---- Stage 0: bit-level G and P ----
+    wire [N-1:0] G0 = a & b;                          // generate
+    wire [N-1:0] P0 = a ^ b;                          // propagate
 
-    // Inject carry-in into bit 0
-    wire [2*W-1:0] G0 = {g0[2*W-1:1], g0[0] | (p0[0] & cin)};
-    wire [2*W-1:0] P0 = p0;
-    // ---- prefix stages (black-cell: G_ij = G_ik | P_ik & G_(k-1)j) ----
-    // Stage 1: stride 1
-    wire [2*W-1:0] G1, P1;
-    assign G1[0]  = G0[0];  
-    assign P1[0]  = P0[0];
-    genvar k;
+    wire [N-1:0] Gp;
+    assign Gp[0]       = G0[0] | (P0[0] & cin);
+    assign Gp[N-1:1]   = G0[N-1:1];
+
+    // ---- Prefix stages ----
+    localparam STAGES = $clog2(N);
+
+    // [FIXED] Verilog-2001 explicit bounds
+    wire [N-1:0] G_st [0:STAGES];
+    wire [N-1:0] P_st [0:STAGES];
+
+    assign G_st[0] = Gp;
+    assign P_st[0] = P0;
+
+    genvar s, k;
     generate
-        for (k = 1; k < 2*W; k = k + 1) begin : ps1
-            assign G1[k] = G0[k] | (P0[k] & G0[k-1]);
-            assign P1[k] = P0[k] & P0[k-1];
+        for (s = 0; s < STAGES; s = s + 1) begin : prefix_stage
+            
+            // [FIXED] Removed the SV "int" keyword
+            localparam STRIDE = (1 << s); 
+
+            for (k = 0; k < N; k = k + 1) begin : prefix_bit
+                if (k < STRIDE) begin
+                    assign G_st[s+1][k] = G_st[s][k];
+                    assign P_st[s+1][k] = P_st[s][k];
+                end else begin
+                    assign G_st[s+1][k] = G_st[s][k] | (P_st[s][k] & G_st[s][k-STRIDE]);
+                    assign P_st[s+1][k] = P_st[s][k] & P_st[s][k-STRIDE];
+                end
+            end
         end
     endgenerate
 
-    // Stage 2: stride 2
-    wire [2*W-1:0] G2, P2;
-    assign G2[1:0] = G1[1:0]; assign P2[1:0] = P1[1:0];
-    generate
-        for (k = 2; k < 2*W; k = k + 1) begin : ps2
-            assign G2[k] = G1[k] | (P1[k] & G1[k-2]);
-            assign P2[k] = P1[k] & P1[k-2];
-        end
-    endgenerate
+    // ---- Post-processing ----
+    wire [N-1:0] carry;
+    assign carry[0]     = cin;
+    assign carry[N-1:1] = G_st[STAGES][N-2:0];
 
-    // Stage 3: stride 4
-    wire [2*W-1:0] G3, P3;
-    assign G3[3:0] = G2[3:0]; assign P3[3:0] = P2[3:0];
-    generate
-        for (k = 4; k < 2*W; k = k + 1) begin : ps3
-            assign G3[k] = G2[k] | (P2[k] & G2[k-4]);
-            assign P3[k] = P2[k] & P2[k-4];
-        end
-    endgenerate
+    assign sum  = P0 ^ carry;
+    assign cout = G_st[STAGES][N-1];
 
-    // Stage 4: stride 8
-    wire [2*W-1:0] G4, P4;
-    assign G4[7:0] = G3[7:0]; assign P4[7:0] = P3[7:0];
-    generate
-        for (k = 8; k < 2*W; k = k + 1) begin : ps4
-            assign G4[k] = G3[k] | (P3[k] & G3[k-8]);
-            assign P4[k] = P3[k] & P3[k-8];
-        end
-    endgenerate
-
-    // ---- post-processing ----
-   wire [2*W-1:0] carry ={G4[2*W-2:0],cin};  // carry[i] = carry into bit i
-    assign sum  = p0 ^ carry;
-    assign cout = G4[2*W-1];
 endmodule
 /* verilator lint_on UNUSEDSIGNAL */

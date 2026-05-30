@@ -62,7 +62,7 @@ module CONTROL_UNIT #(
     output wire                   Jump,
     
     //M-Extension Ports
-    output wire                   start_mul,  
+ //   output wire                   start_mul,  
     output wire                   start_div,  
     output wire [1:0]             Exec_Sel, 
     output wire [2:0]             mul_op_sel,
@@ -111,7 +111,7 @@ module CONTROL_UNIT #(
         .ImmSrc     (ImmSrc),
         .RegWrite   (RegWrite),
         .ALUOp      (ALUOp),
-        .start_mul  (start_mul),
+   //     .start_mul  (start_mul),
         .start_div  (start_div),
         .Exec_Sel   (Exec_Sel),
         .mul_op_sel (mul_op_sel),
